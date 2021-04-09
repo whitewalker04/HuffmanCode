@@ -10,6 +10,7 @@ class Node{
     Node *next;
     Node *left;
     Node *right;
+    int index;
 
     public:
     Node(string key){
@@ -17,6 +18,7 @@ class Node{
         this->next = nullptr;
         this->left = nullptr;
         this->right = nullptr;
+        this->index = 0;
     }
     string getKey(){
         return this->key;
@@ -42,6 +44,12 @@ class Node{
     void setLeft(Node *left){
         this->left  = left;
     }
+    int getIndex(){
+        return this->index;
+    }
+    void setIndex(int index){
+        this->index = index;
+    }
 };
 
 class NodeList{
@@ -53,7 +61,7 @@ class NodeList{
     NodeList(){
         this->head = nullptr;
         this->tail = nullptr;
-        this->size = -1;
+        this->size = 0;
     }
     Node *getHead(){
         return this->head;
@@ -74,7 +82,7 @@ class NodeList{
         this->size = size;
     }
     Node* insertAfter(Node *node){
-        if(this->size == -1){
+        if(this->size == 0){
             this->head = node;
             this->tail = node;
         }
@@ -83,7 +91,28 @@ class NodeList{
             tail = node;
         }
         this->size++;
+        node->setIndex(this->size);
         return this->head;
+    }
+    int existAt(string key){
+        Node *cur = this->head;
+        while (cur != nullptr){
+            if (cur->getKey() == key){
+                return cur->getIndex();
+            }
+            cur = cur->getNext();
+        }
+        return 0;
+    }
+    Node *at(int index){
+        Node *cur = this->head;
+        while (cur != nullptr){
+            if (cur->getIndex() == index){
+                return cur;
+            }
+            cur = cur->getNext();
+        }
+        return nullptr;
     }
     void print(){
         Node *cur = head;
@@ -213,12 +242,16 @@ int main(int argc, char **argv){
     NodeList *leftlist = new NodeList();
     NodeList *rightList = new NodeList();
 
-    inordered->seperateList(leftlist, rightList, "130");
-    cout << "Left Seperated:" << endl;
-    leftlist->print();
-    cout << "Right Seperated:" << endl;
-    rightList->print();
+    //inordered->seperateList(leftlist, rightList, "130");
+    // cout << "Left Seperated:" << endl;
+    // leftlist->print();
+    // cout << "Right Seperated:" << endl;
+    // rightList->print();
 
+    Node *n = inordered->at(6);
+    string msg = n != nullptr ? n->getKey(): "Invalid index\n";
+    cout<<msg<< endl;
+    cout << inordered->existAt(n->getKey());
 
     
     return 0;
