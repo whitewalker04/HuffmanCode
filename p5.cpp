@@ -8,11 +8,17 @@ using namespace std;
 class Node{
     string key;
     Node *next;
+    Node *left;
+    Node *right;
+    int index;
 
     public:
     Node(string key){
         this->key = key;
         this->next = nullptr;
+        this->left = nullptr;
+        this->right = nullptr;
+        this->index = 0;
     }
     string getKey(){
         return this->key;
@@ -26,6 +32,24 @@ class Node{
     void setNext(Node *next){
         this->next = next;
     }
+    Node *getRight(){
+        return this->right;
+    }
+    void setRight(Node *right){
+        this->right = right;
+    }
+    Node *getLeft(){
+        return this->left;
+    }
+    void setLeft(Node *left){
+        this->left  = left;
+    }
+    int getIndex(){
+        return this->index;
+    }
+    void setIndex(int index){
+        this->index = index;
+    }
 };
 
 class NodeList{
@@ -37,7 +61,7 @@ class NodeList{
     NodeList(){
         this->head = nullptr;
         this->tail = nullptr;
-        this->size = -1;
+        this->size = 0;
     }
     Node *getHead(){
         return this->head;
@@ -58,7 +82,7 @@ class NodeList{
         this->size = size;
     }
     Node* insertAfter(Node *node){
-        if(this->size == -1){
+        if(this->size == 0){
             this->head = node;
             this->tail = node;
         }
@@ -67,7 +91,28 @@ class NodeList{
             tail = node;
         }
         this->size++;
+        node->setIndex(this->size);
         return this->head;
+    }
+    int existAt(string key){
+        Node *cur = this->head;
+        while (cur != nullptr){
+            if (cur->getKey() == key){
+                return cur->getIndex();
+            }
+            cur = cur->getNext();
+        }
+        return 0;
+    }
+    Node *at(int index){
+        Node *cur = this->head;
+        while (cur != nullptr){
+            if (cur->getIndex() == index){
+                return cur;
+            }
+            cur = cur->getNext();
+        }
+        return nullptr;
     }
     void print(){
         Node *cur = head;
@@ -77,7 +122,44 @@ class NodeList{
         }
         cout << endl;
     }
+    void seperateList(NodeList *leftList, NodeList *rightList, string key){
+        Node *cur = this->head;
+        Node *prev = this->head;
+        leftList->setHead(this->head);
+        rightList->setHead(this->head);
+        while (cur != nullptr){
+            if (cur->getKey() == key){
+                prev->setNext(nullptr);
+                rightList->setHead(cur->getNext());
+                cur->setNext(nullptr);
+                return;
+            }
+            prev = cur;
+            cur = cur->getNext();        
+        }
+    }
 
+};
+class Tree{
+    Node *root;
+    public: 
+    Tree(){
+        this->root = nullptr;
+    }
+    Node *getRoot(){
+        return this->root;
+    }
+    void setRoot(Node *root){
+        this->root = root;
+    }
+    Node *buildTree(NodeList* inorderhead, NodeList* levelorderhead){
+        Node *lonode = levelorderhead->getHead();//level order node
+        Node *ionode;//in order node
+        Node *node = new Node(lonode->getKey());
+        this->root = node;
+        
+        return nullptr;
+    }
 };
 
 void parseFile(ifstream &fp, NodeList *head){
@@ -157,6 +239,19 @@ int main(int argc, char **argv){
     inordered->print();
     levelordered->print();
 
+    NodeList *leftlist = new NodeList();
+    NodeList *rightList = new NodeList();
+
+    //inordered->seperateList(leftlist, rightList, "130");
+    // cout << "Left Seperated:" << endl;
+    // leftlist->print();
+    // cout << "Right Seperated:" << endl;
+    // rightList->print();
+
+    Node *n = inordered->at(6);
+    string msg = n != nullptr ? n->getKey(): "Invalid index\n";
+    cout<<msg<< endl;
+    cout << inordered->existAt(n->getKey());
 
     
     return 0;
