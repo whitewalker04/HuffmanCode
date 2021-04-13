@@ -171,7 +171,6 @@ class NodeList{
     void removeFirst(Node *cur){
         this->head = cur->getNext();
         cur->setNext(nullptr);
-        cout << "160: " << this->head->getKey() << fflush << endl;
         adjustIndex(this->head);
         this->size--;
     }
@@ -185,11 +184,9 @@ class NodeList{
     void remove(string key){
         Node *cur = this->head;
         Node *prev = this->head;
-        int size = this->size;
         while (cur != nullptr){
             if (cur->getKey() == key){
                 if ( cur->getIndex() == 1 ){
-                    cout << "At line 171" << fflush << endl;
                     removeFirst(cur);
                    // delete[] cur;
                     return;
@@ -223,7 +220,6 @@ class Tree{
         this->root = root;
     }
     void buildTree(NodeList* inorderhead, NodeList* levelorderhead){
-        Node *lonode = levelorderhead->getHead();//level order node
         Node *node = levelorderhead->getHead();
         this->root = node;
         buildTree(inorderhead, levelorderhead, true);
@@ -244,8 +240,6 @@ class Tree{
         // rightList->print();
         // cout << leftList->getSize() << endl;
         // cout << rightList->getSize() << endl;
-
-        int levelOrderSize = levelorderhead->getSize();
         if( leftList->getSize() == 1 ) {
             parent->setLeft( leftList->getHead());
             //levelorderhead->remove(leftList->getHead()->getKey());
@@ -261,6 +255,40 @@ class Tree{
             parent->setRight( levelorderhead->getNextParent(rightList) );
             buildTree(rightList, levelorderhead, false);
         }
+    }
+    void decode(Node *node, string encode, int startAt, string *decoded){
+        string result = "";
+        if (startAt > encode.length()){
+            return;
+        }
+        if(node->getLeft() == nullptr && node->getRight() == nullptr){
+            int key = stoi(node->getKey());
+            char val = (char)key;
+            result += val;
+            *decoded += result;
+            node = this->root;
+            decode(node, encode, startAt, decoded);
+        }
+        else if(encode[startAt] == '0'){
+            startAt++;
+            decode(node->getLeft(), encode, startAt, decoded);
+        }
+        else if(encode[startAt] == '1'){
+            startAt++;
+            decode(node->getRight(), encode, startAt, decoded);
+        }
+        return;
+    }
+    string decode(string encode){
+        string decoded = "";
+        Node *cur = this->root;
+        if (cur->getLeft() == nullptr && cur->getRight() == nullptr){
+            return decoded;
+        }
+        if (encode != ""){
+            decode(cur, encode, 0, &decoded);
+        }
+        return decoded;
     }
     void print( const std::string& prefix, Node *node, bool isLeft ) {
         if( node != nullptr ) {
@@ -355,16 +383,18 @@ int main(int argc, char **argv){
     parseFile(inorder,inordered);
     parseFile(levelorder, levelordered);
     encoded = parseFile(encode);
-    cout << encoded << endl;
-    inordered->print();
-    levelordered->print();
+    //cout << encoded << endl;
+    //inordered->print();
+    //levelordered->print();
     //cout << "Size = " << levelordered->getSize() << endl;
 
     Tree huffTree;
     //cout << inordered->existAt("121") << endl;
     //cout << inordered->existAt("89") << endl;
     huffTree.buildTree(inordered, levelordered);
-    huffTree.print();
+    //huffTree.print();
+    cout << huffTree.decode(encoded);
+    
 
 
     return 0;
