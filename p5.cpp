@@ -128,10 +128,13 @@ class NodeList{
         int count = 0;
         leftList->setHead(this->head);
         rightList->setHead(this->head);
+        leftList->setTail(this->tail);
+        rightList->setTail(this->tail);
         while (cur != nullptr){
             count+=1;
             if (cur->getKey() == key){
                 prev->setNext(nullptr);
+                leftList->setTail(prev);
                 rightList->setHead(cur->getNext());
                 leftList->setSize(count - 1);
                 rightList->setSize(this->size - count);
@@ -140,6 +143,69 @@ class NodeList{
             }
             prev = cur;
             cur = cur->getNext();        
+        }
+    }
+
+    Node *getNextParent(NodeList *seperatedInorder){
+        Node *cur = this->head;
+        while (cur != nullptr){
+            if (seperatedInorder->existAt(cur->getKey())){
+                return cur;
+            }
+            cur = cur->getNext();
+        }
+        return nullptr;
+    }
+    void adjustIndex(Node *node){
+        Node *cur = node;
+        while(cur != nullptr){
+            cur->setIndex(cur->getIndex() - 1);
+            cur = cur->getNext();
+        }
+    }
+    void removeLast(Node *prev){
+        prev->setNext(nullptr);
+        this->tail = prev;
+        this->size--;
+    }
+    void removeFirst(Node *cur){
+        this->head = cur->getNext();
+        cur->setNext(nullptr);
+        cout << "160: " << this->head->getKey() << fflush << endl;
+        adjustIndex(this->head);
+        this->size--;
+    }
+    void removeBetween(Node *prev, Node *cur){
+        prev->setNext(cur->getNext());
+        cur->setNext(nullptr);
+        adjustIndex(prev->getNext());
+        this->size--;
+    }
+
+    void remove(string key){
+        Node *cur = this->head;
+        Node *prev = this->head;
+        int size = this->size;
+        while (cur != nullptr){
+            if (cur->getKey() == key){
+                if ( cur->getIndex() == 1 ){
+                    cout << "At line 171" << fflush << endl;
+                    removeFirst(cur);
+                   // delete[] cur;
+                    return;
+                }
+                else if( cur->getIndex() == this->size ){
+                    removeLast(prev);
+                    return;
+                }
+                else{
+                    removeBetween(prev, cur);
+                    return;
+                }
+
+            }
+            prev = cur;
+            cur = cur->getNext();
         }
     }
 
@@ -160,40 +226,40 @@ class Tree{
         Node *lonode = levelorderhead->getHead();//level order node
         Node *node = levelorderhead->getHead();
         this->root = node;
-        buildTree(inorderhead, levelorderhead, 1 );
+        buildTree(inorderhead, levelorderhead, true);
         //return this->root;
     }
-    void buildTree(NodeList* inorderhead, NodeList* levelorderhead, int index){
-        Node *parent = levelorderhead->at(index);
+    void buildTree(NodeList* inorderhead, NodeList* levelorderhead, bool isRoot){
+        Node *parent = levelorderhead->getNextParent(inorderhead);
+        //cout << "Parent: " << parent->getKey() << endl;
         NodeList *leftList = new NodeList();
         NodeList *rightList = new NodeList();
-        // get index of root or parent node key from level order list
-        //int index = levelorderhead->existAt(root->getKey());
-        cout << "Index is: " << index << endl;
 
         // separate  inorder list based on root or parent we found from levelorder list
         inorderhead->seperateList(leftList, rightList, parent->getKey());
 
+        // cout << "Left Seperated:" << endl;
+        // leftList->print();
+        // cout << "Right Seperated:" << endl;
+        // rightList->print();
+        // cout << leftList->getSize() << endl;
+        // cout << rightList->getSize() << endl;
+
         int levelOrderSize = levelorderhead->getSize();
-
-        // attaching the left side to left child and right side to the right child
-        parent->setLeft( leftList->getSize() != 1 ? levelorderhead->at(2*index) : leftList->getHead());
-        parent->setRight( rightList->getSize() != 1 ?levelorderhead->at(2*index+1) : rightList->getHead());
-        cout << "Left Seperated:" << endl;
-        leftList->print();
-        cout << "Right Seperated:" << endl;
-        rightList->print();
-        cout << leftList->getSize() << endl;
-        cout << rightList->getSize() << endl;
-        if (leftList->getSize() > 1) {
-
-            // calculate the left child index from level order list
-            int leftChildIndex = 2 * index;
-            buildTree(leftList, levelorderhead, leftChildIndex);
+        if( leftList->getSize() == 1 ) {
+            parent->setLeft( leftList->getHead());
+            //levelorderhead->remove(leftList->getHead()->getKey());
+        } else {
+            parent->setLeft( levelorderhead->getNextParent(leftList));
+            buildTree(leftList, levelorderhead, false);
         }
-        if(rightList->getSize() > 1) {
-            int rightChildIndex = 2 * index + 1;
-            buildTree(rightList, levelorderhead, rightChildIndex );
+
+        if( rightList->getSize() == 1 ) {
+            parent->setRight( rightList ->getHead() );
+            //levelorderhead->remove(rightList->getHead()->getKey());
+        } else {
+            parent->setRight( levelorderhead->getNextParent(rightList) );
+            buildTree(rightList, levelorderhead, false);
         }
     }
     void print( const std::string& prefix, Node *node, bool isLeft ) {
@@ -239,6 +305,15 @@ void parseFile(ifstream &fp, NodeList *head){
     }
     
 }
+string parseFile(ifstream &fp){
+    string value = "";
+    string line;
+    while (getline(fp, line)){
+        value += line;    
+    }
+    return value;
+    
+}
 int countNumofWhitespace( string input ) {
     int count = 0;
     for ( int i = 0; i < input.length(); i++ ){
@@ -259,7 +334,7 @@ int main(int argc, char **argv){
     string fileEncoded = argv[3];
     NodeList *inordered = new NodeList();
     NodeList *levelordered = new NodeList();
-    NodeList *encoded;
+    string encoded = "";
 
     
     ifstream inorder(fileInorder);
@@ -279,17 +354,18 @@ int main(int argc, char **argv){
     }
     parseFile(inorder,inordered);
     parseFile(levelorder, levelordered);
-    //parseFile(encode, encoded);
+    encoded = parseFile(encode);
+    cout << encoded << endl;
     inordered->print();
     levelordered->print();
-
-    Node *n = inordered->at(6);
-    string msg = n != nullptr ? n->getKey(): "Invalid index\n";
-    cout<<msg<< endl;
-    cout << inordered->existAt(n->getKey());
+    //cout << "Size = " << levelordered->getSize() << endl;
 
     Tree huffTree;
+    //cout << inordered->existAt("121") << endl;
+    //cout << inordered->existAt("89") << endl;
     huffTree.buildTree(inordered, levelordered);
     huffTree.print();
+
+
     return 0;
 }
